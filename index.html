@@ -634,6 +634,23 @@
       }
     });
 
+    // Preload all images in the background to prevent network latency delays on Vercel
+    const imagesToPreload = [
+      'homepage.JPG',
+      'homepage_scrolled.JPG',
+      'resources_dropdown.JPG',
+      'calculators_dropdown.JPG',
+      'algebra2.JPG',
+      ...RESOURCES.map(r => r.img),
+      ...CALCULATORS.map(c => c.img)
+    ];
+    imagesToPreload.forEach(src => {
+      if (src) {
+        const img = new Image();
+        img.src = src;
+      }
+    });
+
     render();
   </script>
 </body>
