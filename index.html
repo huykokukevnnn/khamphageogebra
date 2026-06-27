@@ -71,7 +71,7 @@
       aspect-ratio: 16 / 9;
       object-fit: cover;
       clip-path: inset(11.5% 0 4.5% 0);
-      background-color: #1e1e24;
+      background-color: #ffffff;
     }
     .scroll-img-2 {
       /* Pulls the image up by 16% of height to close the gap between clipped areas */
@@ -79,41 +79,41 @@
     }
   </style>
 </head>
-<body class="bg-[#1e1e24] min-h-screen flex items-center justify-center font-sans m-0 overflow-hidden">
+<body class="bg-slate-100 min-h-screen flex items-center justify-center font-sans m-0 overflow-hidden">
   
   <div id="app-wrapper" class="w-full h-screen flex flex-col px-0 sm:px-4 py-0 sm:py-4">
     <div class="flex-grow flex flex-col bg-transparent w-full max-w-[1920px] mx-auto relative rounded-xl h-full">
       
       <!-- Fake Browser Header -->
-      <div class="flex-shrink-0 w-full rounded-t-xl overflow-hidden shadow-lg border-x border-t border-slate-700/50 relative z-20">
-        <div class="h-10 bg-[#2b2d31] flex items-center px-4 relative">
+      <div class="flex-shrink-0 w-full rounded-t-xl overflow-hidden shadow-lg border-x border-t border-slate-300 relative z-20">
+        <div class="h-10 bg-[#dfe1e5] flex items-center px-4 relative">
           <div class="flex gap-2 w-16">
             <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
             <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
             <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
           </div>
-          <div class="absolute left-[80px] bottom-0 h-8 w-48 bg-[#383a40] rounded-t-md flex items-center px-3 gap-2">
+          <div class="absolute left-[80px] bottom-0 h-8 w-48 bg-white rounded-t-md flex items-center px-3 gap-2">
             <div class="w-4 h-4 bg-purple-600 rounded flex items-center justify-center text-[10px] text-white font-bold">G</div>
-            <span class="text-xs text-slate-200 truncate">Khám phá GeoGebra</span>
+            <span class="text-xs text-slate-800 truncate">Khám phá GeoGebra</span>
           </div>
         </div>
-        <div class="h-14 bg-[#383a40] flex items-center px-4 gap-4 border-b border-slate-700">
+        <div class="h-14 bg-white flex items-center px-4 gap-4 border-b border-slate-300">
           <div class="flex gap-3 hidden sm:flex">
             <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             <svg class="w-4 h-4 text-slate-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           </div>
-          <div id="url-bar-wrapper" class="flex-grow bg-[#2b2d31] rounded-full h-8 flex items-center px-4 gap-2 border border-[#1e1e24] shadow-inner max-w-3xl mx-auto transition-all cursor-text" onclick="document.getElementById('url-input').focus()">
-            <svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
-            <input type="text" id="url-input" class="bg-transparent border-none outline-none text-sm text-slate-200 w-full placeholder-slate-500 p-0 m-0 focus:ring-0" placeholder="Nhập địa chỉ web vào đây..." autocomplete="off" spellcheck="false" style="display: none;">
-            <span id="static-url" class="text-sm text-slate-200">geogebra.org</span>
+          <div id="url-bar-wrapper" class="flex-grow bg-[#f1f3f4] rounded-full h-8 flex items-center px-4 gap-2 border border-transparent shadow-inner max-w-3xl mx-auto transition-all cursor-text" onclick="document.getElementById('url-input').focus()">
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+            <input type="text" id="url-input" class="bg-transparent border-none outline-none text-sm text-slate-800 w-full placeholder-slate-500 p-0 m-0 focus:ring-0" placeholder="Nhập địa chỉ web vào đây..." autocomplete="off" spellcheck="false" style="display: none;">
+            <span id="static-url" class="text-sm text-slate-800">geogebra.org</span>
           </div>
           <div class="w-16 hidden sm:block"></div>
         </div>
       </div>
 
       <!-- Main Cropped Workspace -->
-      <div class="flex-grow w-full flex items-center justify-center bg-[#1e1e24] overflow-hidden rounded-b-xl border-x border-b border-slate-700/50">
+      <div class="flex-grow w-full flex items-center justify-center bg-white overflow-hidden rounded-b-xl border-x border-b border-slate-300">
         <div id="scale-box">
           <div id="original-image-container">
             
@@ -355,14 +355,14 @@
         case 'typing_url':
           elements.bg1.style.display = 'none';
           elements.bg2.style.display = 'none';
-          elements.track.style.backgroundColor = '#383a40';
+          elements.track.style.backgroundColor = '#f8f9fa';
           
           elements.title.textContent = 'Khởi động Trình duyệt';
           elements.text.innerHTML = 'Để truy cập vào trang web, em hãy click chuột vào thanh địa chỉ phía trên cùng (đang nhấp nháy), gõ <b>geogebra.org</b> và nhấn phím <b>Enter</b> nhé!';
           break;
 
         case 'welcome':
-          elements.track.style.backgroundColor = '#1e1e24';
+          elements.track.style.backgroundColor = '#ffffff';
           setBackground('homepage.JPG');
           elements.title.textContent = 'Bắt đầu';
           elements.text.innerHTML = 'Chào mừng các em đến với GeoGebra! Hãy cuộn chuột xuống dưới để tìm hiểu tổng quan giao diện bằng tiếng Anh nhé!';
