@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Khám phá GeoGebra</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    :root {
+      --crop-top-pct: 11.5;    /* 11.5% top crop (browser UI) */
+      --crop-bottom-pct: 4.5;  /* 4.5% bottom crop (Windows taskbar) */
+      
+      --visible-height-pct: calc(100 - var(--crop-top-pct) - var(--crop-bottom-pct));
+      --visible-height-ratio: calc(var(--visible-height-pct) / 100);
+      
+      --new-aspect-ratio: calc(16 / (9 * var(--visible-height-ratio)));
+      
+      --top-shift: calc(var(--crop-top-pct) / var(--visible-height-pct) * -100%);
+    }
+
+    .bg-layer {
+      pointer-events: none;
+    }
+    
+    .hotspot {
+      position: absolute;
+      cursor: pointer;
+      pointer-events: auto;
+      border-radius: 8px;
+      transition: background-color 0.2s;
+    }
+    
+    .hotspot:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .pulse-ring {
+      animation: pulse-ring 2s infinite;
+      border: 3px solid #a855f7;
+      border-radius: 4px;
+    }
+    
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7); }
+      70% { box-shadow: 0 0 0 15px rgba(168, 85, 247, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
+    }
+
+    #scale-box {
+      width: 100%;
+      max-width: calc((100dvh - 96px - 32px) * var(--new-aspect-ratio));
+      aspect-ratio: var(--new-aspect-ratio);
+      position: relative;
+      overflow: hidden;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    #original-image-container {
+      position: absolute;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      top: var(--top-shift);
+      left: 0;
+    }
+
+    /* Styles for the slider animation */
+    .scroll-img {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      clip-path: inset(11.5% 0 4.5% 0);
+      background-color: #1e1e24;
+    }
+    .scroll-img-2 {
+      /* Pulls the image up by 16% of height to close the gap between clipped areas */
+      margin-top: -9%; 
+    }
+  </style>
+</head>
+<body class="bg-[#1e1e24] min-h-screen flex items-center justify-center font-sans m-0 overflow-hidden">
+  
+  <div id="app-wrapper" class="w-full h-screen flex flex-col px-0 sm:px-4 py-0 sm:py-4">
+    <div class="flex-grow flex flex-col bg-transparent w-full max-w-[1920px] mx-auto relative rounded-xl h-full">
+      
+      <!-- Fake Browser Header -->
+      <div class="flex-shrink-0 w-full rounded-t-xl overflow-hidden shadow-lg border-x border-t border-slate-700/50 relative z-20">
+        <div class="h-10 bg-[#2b2d31] flex items-center px-4 relative">
+          <div class="flex gap-2 w-16">
+            <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
+            <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
+            <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+          </div>
+          <div class="absolute left-[80px] bottom-0 h-8 w-48 bg-[#383a40] rounded-t-md flex items-center px-3 gap-2">
+            <div class="w-4 h-4 bg-purple-600 rounded flex items-center justify-center text-[10px] text-white font-bold">G</div>
+            <span class="text-xs text-slate-200 truncate">Khám phá GeoGebra</span>
+          </div>
+        </div>
+        <div class="h-14 bg-[#383a40] flex items-center px-4 gap-4 border-b border-slate-700">
+          <div class="flex gap-3 hidden sm:flex">
+            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            <svg class="w-4 h-4 text-slate-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          </div>
+          <div class="flex-grow bg-[#2b2d31] rounded-full h-8 flex items-center px-4 gap-2 border border-[#1e1e24] shadow-inner max-w-3xl mx-auto">
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+            <span class="text-sm text-slate-200">geogebra.org</span>
+          </div>
+          <div class="w-16 hidden sm:block"></div>
+        </div>
+      </div>
+
+      <!-- Main Cropped Workspace -->
+      <div class="flex-grow w-full flex items-center justify-center bg-[#1e1e24] overflow-hidden rounded-b-xl border-x border-b border-slate-700/50">
+        <div id="scale-box">
+          <div id="original-image-container">
+            
+            <!-- Slider Track for Smooth Scrolling Animations -->
+            <div id="slider-track" class="absolute inset-0 w-full h-full">
+              <img id="bg-image-1" src="homepage.JPG" alt="" class="scroll-img block bg-layer">
+              <img id="bg-image-2" src="homepage_scrolled.JPG" alt="" class="scroll-img scroll-img-2 block bg-layer" style="display: none;">
+            </div>
+            
+            <!-- Fixed Hotspots Overlay -->
+            <div id="hotspots-container" class="absolute inset-0 z-10 pointer-events-none"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating Guide Panel (Now Draggable!) -->
+      <div id="guide-panel" class="absolute right-4 sm:right-10 top-1/2 -translate-y-1/2 w-[calc(100%-2rem)] sm:w-80 md:w-[26rem] bg-white rounded-2xl shadow-2xl p-6 z-30 pointer-events-auto border border-slate-200 flex flex-col transition-all duration-300">
+        <div class="flex items-center gap-3 mb-4 p-2 -m-2 rounded-lg hover:bg-slate-50 cursor-grab transition-colors" id="guide-header" title="Kéo thả để di chuyển">
+          <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl shrink-0 pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 id="guide-title" class="text-xl font-bold text-slate-800 select-none pointer-events-none">Hướng dẫn</h2>
+          <div class="ml-auto text-slate-300 pointer-events-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+            </svg>
+          </div>
+        </div>
+        
+        <p id="guide-text" class="text-slate-600 leading-relaxed mb-6 flex-grow text-base"></p>
+        
+        <div id="guide-actions" class="flex flex-col gap-3"></div>
+        
+        <div id="progress-container" class="mt-6 pt-4 border-t border-slate-100 hidden">
+          <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Tiến độ khám phá</h3>
+          <div id="progress-items" class="grid grid-cols-2 gap-2 text-sm"></div>
+        </div>
+      </div>
+      
+      <!-- Celebration Modal -->
+      <div id="celebration-modal" class="absolute inset-0 z-50 bg-black/80 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500 rounded-xl">
+        <div class="bg-white p-10 rounded-3xl text-center max-w-lg mx-4 transform scale-95 transition-transform duration-500" id="celebration-card">
+          <div class="text-6xl mb-6">🎉</div>
+          <h2 class="text-3xl font-bold text-slate-800 mb-4">Xuất sắc!</h2>
+          <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+            Các em đã hoàn thành chuyến tham quan và hiểu rõ các công cụ của GeoGebra. Hãy sẵn sàng học toán nhé!
+          </p>
+          <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1">
+            Khám phá lại từ đầu
+          </button>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <script>
+    // Repositioned coordinates inside the original 16:9 image
+    const NAV_COORDS = {
+      resources: { top: '11.5%', left: '30%', width: '7%', height: '6%' },
+      calculators: { top: '11.5%', left: '37%', width: '10%', height: '6%' }
+    };
+
+    // Arrays ordered logically (Left to Right, Top to Bottom) for sequential flow
+    const RESOURCES = [
+      // Row 1
+      { id: 'number_sense', name: 'Number Sense', img: 'number_sense.JPG', desc: 'Mục này giúp các em làm quen với phân số, số thập phân, và trục số trực quan.<br><br><b class="text-blue-700">• Upper Elementary (Tiểu học):</b> Khám phá số đếm, phân số đơn giản.<br><b class="text-blue-700">• Middle School (THCS):</b> Tìm hiểu sâu về số nguyên âm dương và tỷ lệ.', hotspot: { top: '18%', left: '16%', width: '22%', height: '13%' } },
+      { id: 'algebra', name: 'Algebra', img: 'algebra1.JPG', desc: 'Biến các công thức Đại số thành các thanh trượt trực quan sinh động. Các con số không còn khô khan mà có thể kéo thả để xem sự thay đổi.<br><br><b class="text-blue-700">• Upper Elementary (Tiểu học):</b> Nhận biết quy luật hình học và số học cơ bản.<br><b class="text-blue-700">• Middle School (THCS):</b> Giải phương trình, vẽ đồ thị hàm số và hiểu về biến số một cách cực kỳ trực quan.', hotspot: { top: '18%', left: '38%', width: '22%', height: '13%' } },
+      { id: 'geometry', name: 'Geometry', img: 'geometry.JPG', desc: 'Đây là nơi biến môn Hình học trở nên sinh động! Em có thể tự do dùng bút, compa, thước kẻ kỹ thuật số để dựng hình phẳng và không gian.<br><br><b class="text-blue-700">• Upper Elementary (Tiểu học):</b> Nhận dạng khối cơ bản, tính chu vi diện tích.<br><b class="text-blue-700">• Middle School (THCS):</b> Khám phá Định lý Pythagoras, các loại góc, phép đối xứng và tính chất đường tròn qua các mô hình có thể tương tác được.', hotspot: { top: '18%', left: '60%', width: '22%', height: '13%' } },
+      // Row 2
+      { id: 'measurement', name: 'Measurement', img: 'measurement.JPG', desc: 'Học cách đo lường các đại lượng một cách thực tế.<br><br><b class="text-blue-700">• Upper Elementary (Tiểu học):</b> Thực hành đo khoảng cách, khối lượng, thể tích cơ bản.<br><b class="text-blue-700">• Middle School (THCS):</b> Tính toán diện tích bề mặt, đo góc và quy đổi đơn vị.', hotspot: { top: '31%', left: '16%', width: '22%', height: '13%' } },
+      { id: 'operations', name: 'Operations', img: 'operations.JPG', desc: 'Luyện tập các phép tính cơ bản cộng, trừ, nhân, chia với mô hình.<br><br><b class="text-blue-700">• Upper Elementary (Tiểu học):</b> Ôn tập các phép tính với số tự nhiên.<br><b class="text-blue-700">• Middle School (THCS):</b> Thực hành phép tính phân số, số thập phân và thứ tự thực hiện.', hotspot: { top: '31%', left: '38%', width: '22%', height: '13%' } },
+      { id: 'probability_and_statistics', name: 'Probability & Statistics', img: 'probability_and_statistics.JPG', desc: 'Khám phá thế giới Xác suất & Thống kê qua các trò chơi mô phỏng.<br><br><b class="text-blue-700">• Upper Elementary (Tiểu học):</b> Thu thập dữ liệu đơn giản và vẽ biểu đồ.<br><b class="text-blue-700">• Middle School (THCS):</b> Tính xác suất thực tế, phân tích dữ liệu và vẽ biểu đồ phân tán.', hotspot: { top: '31%', left: '60%', width: '22%', height: '13%' } }
+    ];
+
+    const CALCULATORS = [
+      // Row 1
+      { id: 'calculator_suite', name: 'Calculator Suite', img: 'calculator_suite.JPG', desc: 'Bộ máy tính siêu đa năng, kết hợp vẽ đồ thị, tính toán đại số và hình học.<br><br><b class="text-purple-700">📌 Tính năng nổi bật:</b> Giao diện tất cả trong một (All-in-one). Em không cần phải mở nhiều công cụ khác nhau nữa, hệ thống cho phép chuyển đổi mượt mà giữa Giải tích, Hình học và Thống kê chỉ với 1 cú click.', hotspot: { top: '18%', left: '16%', width: '22%', height: '13%' } },
+      { id: 'graphing_calculator', name: 'Graphing Calculator', img: 'graphing_calculator.JPG', desc: 'Máy tính đồ thị thông minh.<br><br><b class="text-purple-700">📌 Tính năng nổi bật:</b> Chỉ cần nhập hàm số (ví dụ y = 2x + 1), hệ thống sẽ ngay lập tức vẽ ra đường đồ thị uốn lượn trực quan trên mặt phẳng tọa độ! Công cụ này còn hỗ trợ tìm các điểm giao nhau và cực trị một cách tự động.', hotspot: { top: '18%', left: '38%', width: '22%', height: '13%' } },
+      { id: 'geometry_calculator', name: 'Geometry Calculator', img: 'geometry_calculator.JPG', desc: 'Công cụ chuyên sâu về hình học phẳng.<br><br><b class="text-purple-700">📌 Tính năng nổi bật:</b> Giống như một hộp bút kỹ thuật số, công cụ cung cấp thước đo độ, compa, thước kẻ... để em vẽ đa giác, đo độ dài đoạn thẳng và số đo góc siêu chuẩn xác đến từng mili.', hotspot: { top: '18%', left: '60%', width: '22%', height: '13%' } },
+      // Row 2
+      { id: '3d_calculator', name: '3D Calculator', img: '3d_calculator.JPG', desc: 'Máy tính không gian 3D tương tác.<br><br><b class="text-purple-700">📌 Tính năng nổi bật:</b> Thay vì phải tưởng tượng khó khăn trên giấy, em có thể dựng các hình khối (hình hộp, hình trụ, mặt cầu) trong không gian 3 chiều và thoải mái xoay 360 độ để quan sát từ mọi góc nhìn.', hotspot: { top: '31%', left: '16%', width: '22%', height: '13%' } },
+      { id: 'scientific_calculator', name: 'Scientific Calculator', img: 'scientific_calculator.JPG', desc: 'Máy tính khoa học nâng cao.<br><br><b class="text-purple-700">📌 Tính năng nổi bật:</b> Vượt xa máy tính bỏ túi thông thường, công cụ này hỗ trợ hiển thị đẹp mắt các phân số nhiều tầng, phép tính lượng giác (sin, cos), căn bậc hai và logarit cực kỳ nhanh chóng.', hotspot: { top: '31%', left: '38%', width: '22%', height: '13%' } },
+      { id: 'notes', name: 'Notes', img: 'notes.JPG', desc: 'Ghi chú kỹ thuật số thông minh.<br><br><b class="text-purple-700">📌 Tính năng nổi bật:</b> Đóng vai trò như một chiếc bảng trắng khổng lồ. Em có thể viết công thức toán học, chèn hình ảnh minh họa, vẽ tay phác thảo ý tưởng và giải bài tập trực tiếp trên đây để chia sẻ với bạn bè.', hotspot: { top: '31%', left: '60%', width: '22%', height: '13%' } }
+    ];
+
+    const state = {
+      step: 'welcome',
+      viewedResources: new Set(),
+      viewedCalculators: new Set(),
+      activeItem: null,
+      algebraPage: 1
+    };
+
+    const elements = {
+      track: document.getElementById('slider-track'),
+      bg1: document.getElementById('bg-image-1'),
+      bg2: document.getElementById('bg-image-2'),
+      title: document.getElementById('guide-title'),
+      text: document.getElementById('guide-text'),
+      actions: document.getElementById('guide-actions'),
+      hotspots: document.getElementById('hotspots-container'),
+      progressContainer: document.getElementById('progress-container'),
+      progressItems: document.getElementById('progress-items'),
+      modal: document.getElementById('celebration-modal'),
+      modalCard: document.getElementById('celebration-card')
+    };
+
+    // Drag-and-Drop functionality for Guide Panel
+    const guidePanel = document.getElementById('guide-panel');
+    const guideHeader = document.getElementById('guide-header');
+    
+    let isDragging = false;
+    let initialX, initialY, currentX, currentY;
+
+    guideHeader.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', dragEnd);
+    
+    // Touch support
+    guideHeader.addEventListener('touchstart', dragStart, {passive: false});
+    document.addEventListener('touchmove', drag, {passive: false});
+    document.addEventListener('touchend', dragEnd);
+
+    function dragStart(e) {
+      if (e.target === guideHeader || guideHeader.contains(e.target)) {
+        isDragging = true;
+        guideHeader.style.cursor = 'grabbing';
+        
+        // Remove Tailwind CSS transitions temporarily to prevent lag during drag
+        guidePanel.style.transition = 'none';
+
+        // Convert the panel from relative Tailwind positioning to absolute pixels on first drag
+        if (!guidePanel.style.left) {
+          const rect = guidePanel.getBoundingClientRect();
+          const parentRect = guidePanel.offsetParent.getBoundingClientRect();
+          
+          guidePanel.classList.remove('top-1/2', '-translate-y-1/2', 'right-4', 'sm:right-10');
+          guidePanel.style.top = (rect.top - parentRect.top) + 'px';
+          guidePanel.style.left = (rect.left - parentRect.left) + 'px';
+          guidePanel.style.right = 'auto'; 
+          
+          if (e.type === 'touchstart') {
+             initialX = e.touches[0].clientX - (rect.left - parentRect.left);
+             initialY = e.touches[0].clientY - (rect.top - parentRect.top);
+          } else {
+             initialX = e.clientX - (rect.left - parentRect.left);
+             initialY = e.clientY - (rect.top - parentRect.top);
+          }
+          return;
+        }
+        
+        if (e.type === 'touchstart') {
+          initialX = e.touches[0].clientX - parseInt(guidePanel.style.left);
+          initialY = e.touches[0].clientY - parseInt(guidePanel.style.top);
+        } else {
+          initialX = e.clientX - parseInt(guidePanel.style.left);
+          initialY = e.clientY - parseInt(guidePanel.style.top);
+        }
+      }
+    }
+
+    function drag(e) {
+      if (isDragging) {
+        e.preventDefault();
+        if (e.type === 'touchmove') {
+          currentX = e.touches[0].clientX - initialX;
+          currentY = e.touches[0].clientY - initialY;
+        } else {
+          currentX = e.clientX - initialX;
+          currentY = e.clientY - initialY;
+        }
+
+        guidePanel.style.left = currentX + 'px';
+        guidePanel.style.top = currentY + 'px';
+      }
+    }
+
+    function dragEnd(e) {
+      isDragging = false;
+      guideHeader.style.cursor = 'grab';
+      // Restore transition for non-drag events (like panel expanding)
+      guidePanel.style.transition = '';
+    }
+
+    // Background engine for smooth scroll simulation
+    function setBackground(img1, img2 = null, animateScroll = false) {
+      elements.bg1.src = img1;
+      
+      if (img2) {
+        elements.bg2.src = img2;
+        elements.bg2.style.display = 'block';
+        
+        if (animateScroll) {
+          // Reset position silently first
+          elements.track.style.transition = 'none';
+          elements.track.style.transform = 'translateY(0)';
+          
+          // Force reflow
+          void elements.track.offsetWidth;
+          
+          // Animate to -84% (exact offset needed to align perfectly due to our negative margins and clip-paths)
+          elements.track.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+          elements.track.style.transform = 'translateY(-84%)';
+        } else {
+          elements.track.style.transition = 'none';
+          elements.track.style.transform = 'translateY(0)';
+        }
+      } else {
+        elements.bg2.style.display = 'none';
+        elements.track.style.transition = 'none';
+        elements.track.style.transform = 'translateY(0)';
+      }
+    }
+
+    function render() {
+      elements.hotspots.innerHTML = '';
+      elements.actions.innerHTML = '';
+      elements.progressContainer.classList.add('hidden');
+
+      switch (state.step) {
+        case 'welcome':
+          setBackground('homepage.JPG');
+          elements.title.textContent = 'Bắt đầu';
+          elements.text.innerHTML = 'Chào mừng các em đến với GeoGebra! Hãy cuộn chuột xuống dưới để tìm hiểu tổng quan giao diện bằng tiếng Anh nhé!';
+          
+          elements.actions.innerHTML = `
+            <button onclick="handleAction('scroll_down')" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-md animate-bounce mt-4">
+              Cuộn xuống
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          `;
+          window.addEventListener('wheel', handleScrollEvent, { once: true });
+          break;
+
+        case 'scrolled':
+          setBackground('homepage.JPG', 'homepage_scrolled.JPG', true);
+          elements.title.textContent = 'Tổng quan';
+          elements.text.innerHTML = "Đây là mục 'What we offer' (Những gì chúng tôi cung cấp) - nơi chứa tài liệu và các máy tính toán học.";
+          
+          elements.actions.innerHTML = `
+            <button onclick="handleAction('continue_to_resources')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-md mt-4">
+              Tiếp tục
+            </button>
+          `;
+          break;
+
+        case 'resources_menu':
+          setBackground('homepage.JPG');
+          elements.title.textContent = 'Mục Tài nguyên';
+          elements.text.innerHTML = 'Hãy nhấn vào mục "Resources" trên thanh điều hướng để khám phá các tài liệu học tập.';
+          
+          addHotspot(NAV_COORDS.resources, () => handleAction('open_resources'), true);
+          break;
+
+        case 'resources_loop':
+          if (state.activeItem) {
+            const item = RESOURCES.find(r => r.id === state.activeItem);
+            elements.title.textContent = item.name;
+            
+            if (item.id === 'algebra') {
+              if (state.algebraPage === 1) {
+                setBackground('algebra1.JPG');
+                elements.text.innerHTML = "Đây là phần Đại số phần 1. Hãy bấm 'Xem tiếp' để cuộn xuống xem phần 2 nhé!";
+                elements.actions.innerHTML = `
+                  <button onclick="handleAction('algebra_next')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-md mt-4">
+                    Xem tiếp
+                  </button>
+                `;
+              } else {
+                setBackground('algebra1.JPG', 'algebra2.JPG', true);
+                elements.text.innerHTML = item.desc;
+                addBackButton();
+              }
+            } else {
+              setBackground(item.img);
+              elements.text.innerHTML = item.desc;
+              addBackButton();
+            }
+          } else {
+            setBackground('resources_dropdown.JPG');
+            elements.title.textContent = 'Danh sách Tài nguyên';
+            
+            if (state.viewedResources.size === 6) {
+              elements.text.innerHTML = 'Tuyệt vời! Em đã xem hết các tài nguyên. Bây giờ hãy chuyển sang mục Máy tính (Calculators) nhé.';
+              elements.actions.innerHTML = `
+                <button onclick="handleAction('go_to_calculators_menu')" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-md mt-4">
+                  Tiếp tục khám phá Máy tính
+                </button>
+              `;
+            } else {
+              elements.text.innerHTML = 'Hãy lần lượt nhấn vào nút đang nhấp nháy trên màn hình để khám phá theo thứ tự nhé!';
+              
+              // Sequential Logic: Only show hotspot for the NEXT unviewed item
+              const unviewed = RESOURCES.filter(res => !state.viewedResources.has(res.id));
+              if (unviewed.length > 0) {
+                 addHotspot(unviewed[0].hotspot, () => handleAction('view_resource', unviewed[0].id), true);
+              }
+            }
+            renderProgress(RESOURCES, state.viewedResources);
+          }
+          break;
+
+        case 'calculators_menu':
+          setBackground('homepage.JPG');
+          elements.title.textContent = 'Mục Máy tính';
+          elements.text.innerHTML = 'Hãy nhấn vào mục "Calculators" trên thanh điều hướng để xem các công cụ máy tính nhé.';
+          
+          addHotspot(NAV_COORDS.calculators, () => handleAction('open_calculators'), true);
+          break;
+
+        case 'calculators_loop':
+          if (state.activeItem) {
+            const item = CALCULATORS.find(c => c.id === state.activeItem);
+            setBackground(item.img);
+            elements.title.textContent = item.name;
+            elements.text.innerHTML = item.desc;
+            addBackButton();
+          } else {
+            setBackground('calculators_dropdown.JPG');
+            elements.title.textContent = 'Các loại Máy tính';
+            
+            if (state.viewedCalculators.size === 6) {
+              elements.text.innerHTML = 'Chúc mừng! Các em đã hoàn thành việc khám phá tất cả công cụ.';
+              elements.actions.innerHTML = `
+                <button onclick="handleAction('finish')" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg mt-4">
+                  Hoàn thành chuyến tham quan
+                </button>
+              `;
+            } else {
+              elements.text.innerHTML = 'Hãy lần lượt nhấn vào công cụ máy tính đang nhấp nháy để tìm hiểu cách sử dụng!';
+              
+              // Sequential Logic: Only show hotspot for the NEXT unviewed calculator
+              const unviewed = CALCULATORS.filter(calc => !state.viewedCalculators.has(calc.id));
+              if (unviewed.length > 0) {
+                 addHotspot(unviewed[0].hotspot, () => handleAction('view_calculator', unviewed[0].id), true);
+              }
+            }
+            renderProgress(CALCULATORS, state.viewedCalculators);
+          }
+          break;
+      }
+    }
+
+    function addBackButton() {
+      elements.actions.innerHTML = `
+        <button onclick="handleAction('back')" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-md mt-4 flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+          </svg>
+          Quay lại để xem mục tiếp theo
+        </button>
+      `;
+    }
+
+    function addHotspot(coords, onClick, pulse = false) {
+      const div = document.createElement('div');
+      div.className = 'hotspot';
+      if (pulse) div.classList.add('pulse-ring');
+      div.style.top = coords.top;
+      div.style.left = coords.left;
+      div.style.width = coords.width;
+      div.style.height = coords.height;
+      div.onclick = onClick;
+      elements.hotspots.appendChild(div);
+    }
+
+    function renderProgress(items, viewedSet) {
+      elements.progressContainer.classList.remove('hidden');
+      elements.progressItems.innerHTML = items.map(item => `
+        <div class="flex items-center gap-2 ${viewedSet.has(item.id) ? 'text-green-600 font-medium' : 'text-slate-400'}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            ${viewedSet.has(item.id) 
+              ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />'
+              : '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />'}
+          </svg>
+          <span class="truncate">${item.name}</span>
+        </div>
+      `).join('');
+    }
+
+    function handleScrollEvent(e) {
+      if (state.step === 'welcome' && e.deltaY > 0) {
+        handleAction('scroll_down');
+      } else {
+        window.addEventListener('wheel', handleScrollEvent, { once: true });
+      }
+    }
+
+    function handleAction(action, payload) {
+      switch (action) {
+        case 'scroll_down':
+          state.step = 'scrolled';
+          break;
+        case 'continue_to_resources':
+          state.step = 'resources_menu';
+          break;
+        case 'open_resources':
+          state.step = 'resources_loop';
+          state.activeItem = null;
+          break;
+        case 'view_resource':
+          state.activeItem = payload;
+          if (payload === 'algebra') {
+            state.algebraPage = 1;
+          }
+          break;
+        case 'algebra_next':
+          state.algebraPage = 2;
+          break;
+        case 'back':
+          if (state.step === 'resources_loop') {
+            state.viewedResources.add(state.activeItem);
+            state.activeItem = null;
+          } else if (state.step === 'calculators_loop') {
+            state.viewedCalculators.add(state.activeItem);
+            state.activeItem = null;
+          }
+          break;
+        case 'go_to_calculators_menu':
+          state.step = 'calculators_menu';
+          break;
+        case 'open_calculators':
+          state.step = 'calculators_loop';
+          state.activeItem = null;
+          break;
+        case 'view_calculator':
+          state.activeItem = payload;
+          break;
+        case 'finish':
+          triggerGraduation();
+          return;
+      }
+      
+      // Visual feedback flash logic - skip flashing if we are about to do a scroll animation
+      const willAnimateScroll = (action === 'scroll_down' || action === 'algebra_next');
+      if (!willAnimateScroll) {
+        elements.track.style.opacity = '0.7';
+        setTimeout(() => {
+          elements.track.style.opacity = '1';
+        }, 150);
+      }
+
+      render();
+    }
+
+    function triggerGraduation() {
+      elements.modal.classList.remove('pointer-events-none', 'opacity-0');
+      elements.modalCard.classList.remove('scale-95');
+      elements.modalCard.classList.add('scale-100');
+      
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+      function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti(Object.assign({}, defaults, { particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        }));
+        confetti(Object.assign({}, defaults, { particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        }));
+      }, 250);
+    }
+
+    render();
+  </script>
+</body>
+</html>
