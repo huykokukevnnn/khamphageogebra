@@ -103,9 +103,10 @@
             <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             <svg class="w-4 h-4 text-slate-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           </div>
-          <div class="flex-grow bg-[#2b2d31] rounded-full h-8 flex items-center px-4 gap-2 border border-[#1e1e24] shadow-inner max-w-3xl mx-auto">
+          <div id="url-bar-wrapper" class="flex-grow bg-[#2b2d31] rounded-full h-8 flex items-center px-4 gap-2 border border-[#1e1e24] shadow-inner max-w-3xl mx-auto transition-all cursor-text" onclick="document.getElementById('url-input').focus()">
             <svg class="w-3.5 h-3.5 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
-            <span class="text-sm text-slate-200">geogebra.org</span>
+            <input type="text" id="url-input" class="bg-transparent border-none outline-none text-sm text-slate-200 w-full placeholder-slate-500 p-0 m-0 focus:ring-0" placeholder="Nhập địa chỉ web vào đây..." autocomplete="off" spellcheck="false" style="display: none;">
+            <span id="static-url" class="text-sm text-slate-200">geogebra.org</span>
           </div>
           <div class="w-16 hidden sm:block"></div>
         </div>
@@ -202,7 +203,7 @@
     ];
 
     const state = {
-      step: 'welcome',
+      step: 'typing_url',
       viewedResources: new Set(),
       viewedCalculators: new Set(),
       activeItem: null,
@@ -334,9 +335,33 @@
       elements.hotspots.innerHTML = '';
       elements.actions.innerHTML = '';
       elements.progressContainer.classList.add('hidden');
+      
+      const urlWrapper = document.getElementById('url-bar-wrapper');
+      const urlInput = document.getElementById('url-input');
+      const staticUrl = document.getElementById('static-url');
+
+      if (state.step === 'typing_url') {
+        urlInput.style.display = 'block';
+        staticUrl.style.display = 'none';
+        urlWrapper.classList.add('ring-2', 'ring-purple-500', 'animate-pulse');
+      } else {
+        urlInput.style.display = 'none';
+        staticUrl.style.display = 'block';
+        urlWrapper.classList.remove('ring-2', 'ring-purple-500', 'animate-pulse');
+      }
 
       switch (state.step) {
+        case 'typing_url':
+          elements.bg1.style.display = 'none';
+          elements.bg2.style.display = 'none';
+          elements.track.style.backgroundColor = '#383a40';
+          
+          elements.title.textContent = 'Khởi động Trình duyệt';
+          elements.text.innerHTML = 'Để truy cập vào trang web, em hãy click chuột vào thanh địa chỉ phía trên cùng (đang nhấp nháy), gõ <b>geogebra.org</b> và nhấn phím <b>Enter</b> nhé!';
+          break;
+
         case 'welcome':
+          elements.track.style.backgroundColor = '#1e1e24';
           setBackground('homepage.JPG');
           elements.title.textContent = 'Bắt đầu';
           elements.text.innerHTML = 'Chào mừng các em đến với GeoGebra! Hãy cuộn chuột xuống dưới để tìm hiểu tổng quan giao diện bằng tiếng Anh nhé!';
@@ -592,6 +617,21 @@
         }));
       }, 250);
     }
+
+    document.getElementById('url-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const val = this.value.trim().toLowerCase();
+        if (val === 'geogebra.org' || val === 'www.geogebra.org' || val === 'https://geogebra.org' || val === 'http://geogebra.org') {
+          this.blur();
+          state.step = 'welcome';
+          render();
+        } else {
+          elements.text.innerHTML = '<span class="text-red-500 font-semibold">Sai địa chỉ rồi em ơi!</span> Hãy gõ chính xác <b>geogebra.org</b> và nhấn phím <b>Enter</b> nhé.';
+          this.classList.add('text-red-400');
+          setTimeout(() => this.classList.remove('text-red-400'), 1500);
+        }
+      }
+    });
 
     render();
   </script>
